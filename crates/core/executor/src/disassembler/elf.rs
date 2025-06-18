@@ -199,6 +199,14 @@ impl Elf {
             eyre::bail!("base address is not found");
         }
 
+        // Remove trailing zeros from instructions
+        let instructions = instructions.into_iter()
+            .rev()
+            .skip_while(|&x| x == 0)
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
+            .collect();
         Ok(Elf::new(instructions, entry, base_address.unwrap(), image))
     }
 }

@@ -8,6 +8,12 @@ use sp1_sdk::{self, Prover, ProverClient, SP1Context, SP1Prover, SP1Stdin};
 use sp1_stark::SP1ProverOpts;
 use test_artifacts::VERIFY_PROOF_ELF;
 
+// Add ELF parsing imports for signature collection
+use elf::{abi::STT_OBJECT, endian::AnyEndian, ElfBytes};
+use sp1_core_executor::{Executor, ExecutorMode, Program};
+use sp1_core_machine::shape::CoreShapeConfig;
+use p3_baby_bear::BabyBear;
+
 #[derive(Parser, Clone)]
 #[command(about = "Evaluate the performance of SP1 on programs.")]
 struct PerfArgs {
@@ -24,6 +30,10 @@ struct PerfArgs {
     /// Provide this only in prove mode.
     #[arg(short, long)]
     pub mode: ProverMode,
+
+    /// Test signatures output file.
+    #[arg(long)]
+    pub signatures: Option<String>,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -48,6 +58,105 @@ pub fn time_operation<T, F: FnOnce() -> T>(operation: F) -> (T, std::time::Durat
     (result, duration)
 }
 
+/// Parse ELF symbols to find signature region boundaries
+fn parse_signature_symbols(elf_data: &[u8]) -> Result<(u32, usize), Box<dyn std::error::Error>> {
+    let elf = ElfBytes::<AnyEndian>::minimal_parse(elf_data)?;
+    
+    let (symbol_table, string_table) = elf.symbol_table()?
+        .ok_or("No symbol table found")?;
+    
+    let mut begin_signature_addr: Option<u64> = None;
+    let mut end_signature_addr: Option<u64> = None;
+    
+    for symbol in symbol_table.iter() {
+        if symbol.st_symtype() == STT_OBJECT || symbol.st_symtype() == elf::abi::STT_NOTYPE {
+            if let Ok(name) = string_table.get(symbol.st_name as usize) {
+                match name {
+                    "begin_signature" => {
+                        begin_signature_addr = Some(symbol.st_value);
+                        println!("Found begin_signature at 0x{:x}", symbol.st_value);
+                    }
+                    "end_signature" => {
+                        end_signature_addr = Some(symbol.st_value);
+                        println!("Found end_signature at 0x{:x}", symbol.st_value);
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+    
+    if let (Some(begin_addr), Some(end_addr)) = (begin_signature_addr, end_signature_addr) {
+        let size = (end_addr - begin_addr) as usize;
+        Ok((begin_addr as u32, size))
+    } else {
+        Err("Could not find both begin_signature and end_signature symbols".into())
+    }
+}
+
+/// Collect signature data from executor memory
+fn collect_signatures(executor: &mut Executor, addr: u32, size: usize) -> Vec<u32> {
+    let mut signatures = Vec::<u32>::new();
+    
+    // Read memory in 4-byte chunks
+    for i in (0..size).step_by(4) {
+        let byte_addr = addr + i as u32;
+        let mut word_bytes = [0u8; 4];
+        
+        // Read 4 bytes from memory using SP1's byte method
+        for j in 0..4 {
+            if i + j < size {
+                word_bytes[j] = executor.byte(byte_addr + j as u32);
+            }
+        }
+        
+        // Convert to little-endian u32
+        let signature = u32::from_le_bytes(word_bytes);
+        signatures.push(signature);
+    }
+    
+    signatures
+}
+
+/// Run executor to collect signatures
+fn run_executor_for_signatures(elf: &[u8], stdin: &SP1Stdin, signature_file: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let opts = SP1ProverOpts::auto();
+    
+    let mut program = Program::from(elf).expect("failed to parse program");
+    let shape_config = CoreShapeConfig::<BabyBear>::default();
+    shape_config.fix_preprocessed_shape(&mut program).unwrap();
+    let maximal_shapes = shape_config
+        .maximal_core_shapes(opts.core_opts.shard_size.ilog2() as usize)
+        .into_iter()
+        .collect::<_>();
+
+    let mut executor = Executor::new(program, opts.core_opts);
+    executor.maximal_shapes = Some(maximal_shapes);
+    executor.write_vecs(&stdin.buffer);
+    for (proof, vkey) in stdin.proofs.iter() {
+        executor.write_proof(proof.clone(), vkey.clone());
+    }
+
+    // Execute the program
+    executor.run_fast();
+
+    // Parse signature symbols from ELF
+    let (addr, size) = parse_signature_symbols(elf)?;
+    println!("Signature region: addr=0x{:x}, size={}", addr, size);
+
+    // Collect signatures from executor memory
+    let signatures = collect_signatures(&mut executor, addr, size);
+    let signature_content = signatures
+        .iter()
+        .map(|sig| format!("{:08x}\n", sig))
+        .collect::<String>();
+    
+    std::fs::write(signature_file, signature_content)?;
+    println!("Wrote {} signatures to {}", signatures.len(), signature_file);
+    
+    Ok(())
+}
+
 fn main() {
     sp1_sdk::utils::setup_logger();
     let args = PerfArgs::parse();
@@ -62,6 +171,14 @@ fn main() {
     let (pk, pk_d, program, vk) = prover.setup(&elf);
     match args.mode {
         ProverMode::Cpu => {
+            // Collect signatures if requested
+            if let Some(signature_file) = &args.signatures {
+                println!("Collecting signatures for RISC-V compliance...");
+                if let Err(e) = run_executor_for_signatures(&elf, &stdin, signature_file) {
+                    println!("Warning: Failed to collect signatures: {}", e);
+                }
+            }
+
             let context = SP1Context::default();
             let (report, execution_duration) =
                 time_operation(|| prover.execute(&elf, &stdin, context.clone()));

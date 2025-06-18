@@ -1,0 +1,9 @@
+[package]
+name = "sp1_executor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sp1-sdk = { path = "../crates/sdk" }
+anyhow = "1.0"
+hex = "0.4"

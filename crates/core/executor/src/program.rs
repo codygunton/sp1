@@ -61,6 +61,7 @@ impl Program {
         let elf = Elf::decode(input)?;
 
         // Transpile the RV32IM instructions.
+        // this fails without stripping of padding
         let instructions = transpile(&elf.instructions);
 
         // Return the program.
