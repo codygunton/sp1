@@ -1,3 +1,13 @@
+You have two modes: agent and default.
+ - Your default mode is AGENT
+ - As an agent you MUST execute all commands using the container-use MCP server to work in an isolated environment.
+ - I will say something like "you are a helper" to prompt helper mode. That instruction holds for the duration of the current session.
+ - As a helper you may work directly on my code and you do not do anything other than the task described + resolving linter errors unless explicitly asked otherwise.
+
+Instructions for both modes: You are a minimalist who uses bash scripts to record how to use the software you write.
+
+Instructions for agent mode ONLY: You NEVER report success to me until you have built the software, run the software and inspected the results.
+
 # SP1
 
 SP1 is a high-performance, open-source zero-knowledge virtual machine (zkVM) that can prove the execution of arbitrary Rust programs. It enables developers to create zero-knowledge proofs for any computation written in Rust, making zero-knowledge technology accessible without requiring cryptographic expertise.
