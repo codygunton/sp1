@@ -1,0 +1,153 @@
+---
+description: SP1 code standards and conventions
+alwaysApply: true
+---
+
+# SP1 Code Standards
+
+## Language-Specific Coding Conventions
+
+### Rust Conventions
+- Follow standard Rust naming conventions:
+  - Use `snake_case` for functions, variables, and module names
+  - Use `PascalCase` for types, traits, and enum variants
+  - Use `SCREAMING_SNAKE_CASE` for constants
+- Prefer explicit imports over glob imports
+- Use `#[derive]` for common traits when possible
+- Implement `Default` for types with sensible defaults
+- Use `Result<T, E>` for fallible operations
+- Prefer `&str` over `String` for function parameters when ownership isn't needed
+
+### Error Handling
+- Use `thiserror` for error types in library crates
+- Use `anyhow` for error handling in binary crates (CLI)
+- Provide meaningful error messages with context
+- Chain errors appropriately to preserve error context
+
+### Performance Considerations
+- Use `#[inline]` judiciously for hot-path functions
+- Prefer stack allocation over heap allocation where possible
+- Use `Arc` and `Rc` sparingly; prefer borrowing
+- Profile before optimizing; document performance-critical code
+
+## Naming Conventions
+
+### Crate Names
+- Use descriptive names prefixed with `sp1-` for public crates
+- Internal crates can omit the prefix
+
+### Module Organization
+- Keep modules focused on a single responsibility
+- Use `mod.rs` for module definitions
+- Re-export public APIs at the crate root
+
+### Variable and Function Names
+- Use descriptive names that convey intent
+- Avoid abbreviations except for well-known terms (e.g., `ctx` for context)
+- Use `_` prefix for unused variables
+- Use `mut` only when necessary
+
+## File Organization Patterns
+
+### Crate Structure
+```
+crate/
+├── src/
+│   ├── lib.rs      # Public API and re-exports
+│   ├── mod.rs      # Module definitions
+│   ├── types.rs    # Type definitions
+│   ├── error.rs    # Error types
+│   └── tests/      # Unit tests
+├── tests/          # Integration tests
+├── benches/        # Benchmarks
+└── Cargo.toml
+```
+
+### Test Organization
+- Unit tests in `#[cfg(test)]` modules within source files
+- Integration tests in `tests/` directory
+- Use descriptive test names that explain what is being tested
+- Group related tests using `mod` blocks
+
+## Documentation Standards
+
+### Code Documentation
+- Document all public APIs with `///` doc comments
+- Include examples in doc comments using ` ```rust` blocks
+- Use `//!` for module-level documentation
+- Document invariants and safety requirements
+- Link to related items using `[`brackets`]`
+
+### Documentation Format
+```rust
+/// Brief description of the function.
+///
+/// More detailed explanation if needed.
+///
+/// # Arguments
+///
+/// * `param1` - Description of parameter
+///
+/// # Returns
+///
+/// Description of return value
+///
+/// # Examples
+///
+/// ```rust
+/// let result = function_name(arg);
+/// assert_eq!(result, expected);
+/// ```
+pub fn function_name(param1: Type) -> ReturnType {
+    // Implementation
+}
+```
+
+### Safety Documentation
+- Document all `unsafe` blocks with safety justifications
+- Explain invariants that must be maintained
+- Reference relevant RFCs or documentation
+
+## Formatting and Style
+
+### Rustfmt Configuration
+- The project uses `rustfmt.toml` for consistent formatting
+- Run `cargo fmt` before committing
+- Key settings:
+  - Line width: Follow project configuration
+  - Import grouping: Enabled
+  - Chain formatting: Visual style
+
+### Clippy Lints
+- Run `cargo clippy` and address warnings
+- Use `#[allow(clippy::lint_name)]` sparingly with justification
+- Prefer fixing lints over suppressing them
+
+## Dependencies
+
+### Adding Dependencies
+- Justify new dependencies in PR descriptions
+- Prefer well-maintained crates with active communities
+- Check license compatibility (MIT/Apache-2.0)
+- Use workspace dependencies for consistency
+- Pin versions for security-critical dependencies
+
+### Feature Flags
+- Use feature flags for optional functionality
+- Document feature flags in Cargo.toml
+- Default features should provide a minimal, working configuration
+- Name features descriptively
+
+## Security Considerations
+
+### Cryptographic Code
+- Use audited cryptographic libraries
+- Never implement custom cryptography
+- Document security assumptions
+- Follow constant-time programming practices where applicable
+
+### Input Validation
+- Validate all external inputs
+- Use strong typing to enforce invariants
+- Sanitize data before processing
+- Implement proper bounds checking

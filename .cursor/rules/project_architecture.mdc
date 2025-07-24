@@ -1,0 +1,82 @@
+---
+description: SP1 project architecture and organization guidelines
+alwaysApply: true
+---
+
+# SP1 Project Architecture
+
+SP1 is a high-performance, open-source zero-knowledge virtual machine (zkVM) that can prove the execution of arbitrary Rust programs.
+
+## Overall Project Structure
+
+The project is organized as a Rust workspace with the following key components:
+
+### Core Components (`crates/`)
+- **core/**: Core zkVM functionality including the executor and machine implementation
+  - `executor/`: Program execution engine
+  - `machine/`: Virtual machine implementation
+  - `shard/`: Sharding functionality for parallel processing
+
+- **zkvm/**: The main zkVM implementation and interface
+  - `entrypoint/`: Entry point for zkVM programs
+  - `precompiles/`: Precompiled contracts and operations
+
+- **prover/**: Zero-knowledge proof generation
+  - Support for CPU and GPU (CUDA) acceleration
+  - Various proving backends and optimizations
+
+- **verifier/**: Proof verification logic
+
+- **recursion/**: Recursive proof functionality for proof composition
+  - `circuit/`: Circuit implementations
+  - `compiler/`: Circuit compilation
+  - `gnark-ffi/`: FFI bindings to gnark prover
+
+### Developer Tools
+- **cli/**: Command-line tools for building, proving, and verifying programs
+- **sdk/**: Software Development Kit for integrating SP1 into applications
+- **build/**: Build utilities and helpers
+
+### Supporting Infrastructure
+- **stark/**: STARK proof system implementation
+- **cuda/**: CUDA kernels and GPU acceleration support
+- **perf/**: Performance testing and benchmarking tools
+- **eval/**: Evaluation and testing framework
+
+### Examples and Documentation
+- **examples/**: Example SP1 programs demonstrating various use cases
+  - `fibonacci/`: Basic example
+  - `chess/`, `json/`, `regex/`: Complex application examples
+  - `cycle-tracking/`, `io/`: System interaction examples
+
+## Main Technologies and Frameworks
+
+- **Language**: Rust (MSRV 1.79)
+- **Proof System**: STARKs (Scalable Transparent ARguments of Knowledge)
+- **Parallelization**: Rayon for CPU parallelism
+- **GPU Support**: CUDA for accelerated proving
+- **Serialization**: Serde for data serialization
+- **FFI**: C/C++ bindings for external prover integration (gnark)
+
+## Build System and Tooling
+
+- **Cargo**: Rust's build system and package manager
+- **Workspace**: Monorepo structure using Cargo workspaces
+- **Custom Build Scripts**: Located in `crates/build/` for SP1-specific compilation
+- **Docker**: Support for containerized builds and development
+- **Release Automation**: Using `release-plz` for versioning and releases
+
+## Key Design Principles
+
+1. **Modularity**: Each crate has a specific purpose and clear boundaries
+2. **Performance**: Heavy optimization for proving speed (CPU and GPU paths)
+3. **Developer Experience**: SDK and CLI tools for easy integration
+4. **Extensibility**: Support for custom precompiles and extensions
+5. **Security**: Multiple audits from leading security firms
+
+## Dependencies and External Libraries
+
+- Core cryptographic libraries (p3, baby-bear)
+- Hardware acceleration (CUDA, OpenCL support)
+- Serialization and communication (serde, bincode)
+- Async runtime (tokio) for network operations

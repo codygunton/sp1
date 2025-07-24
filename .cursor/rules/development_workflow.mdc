@@ -1,0 +1,207 @@
+---
+description: SP1 development workflow, testing, and CI/CD guidelines
+alwaysApply: true
+---
+
+# SP1 Development Workflow
+
+## Git Workflow and Branching Strategy
+
+### Branch Structure
+- **main**: Production-ready code, stable releases
+- **dev**: Development branch for integration
+- **feature/**: Feature branches for new functionality
+- **fix/**: Bugfix branches
+- **release/**: Release preparation branches (managed by release-plz)
+
+### Pull Request Workflow
+1. Fork the repository or create a feature branch
+2. Make changes following code standards
+3. Write tests for all code changes
+4. Ensure all CI checks pass
+5. Submit PR with filled template
+6. Address review feedback constructively
+7. Squash checkpoint commits before merge
+
+### Commit Standards
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+- `feat:` New features
+- `fix:` Bug fixes
+- `docs:` Documentation changes
+- `refactor:` Code refactoring
+- `chore:` Maintenance tasks
+- `test:` Test additions or modifications
+- `perf:` Performance improvements
+- `style:` Code style changes
+
+Examples:
+```
+feat: add GPU acceleration for proof generation
+fix: resolve memory leak in recursion circuit
+docs: update SDK integration guide
+```
+
+## Testing Requirements and Patterns
+
+### Test Organization
+- Unit tests: In source files within `#[cfg(test)]` modules
+- Integration tests: In `tests/` directory
+- Benchmarks: In `benches/` directory
+- Examples: In `examples/` directory with CI validation
+
+### Running Tests
+```bash
+# Basic test run
+cd core && cargo test
+
+# Test with all features
+cargo test --all-features
+
+# Test in release mode (recommended for performance)
+cargo test --release
+
+# Debug constraint failures
+RUST_LOG=info RUST_BACKTRACE=1 cargo test --features debug
+```
+
+### Test Requirements
+- All code changes MUST include tests
+- Tests must demonstrate the fix or feature works
+- Tests must prevent future regressions
+- Integration tests for user-facing APIs
+- Unit tests for internal logic
+
+### Multi-Architecture Testing
+- Tests run on both x86-64 and ARM64
+- Ensure compatibility across architectures
+- Use conditional compilation for arch-specific code
+
+## CI/CD Pipeline Expectations
+
+### Pre-commit Checks
+Run locally before pushing:
+```bash
+# Format code
+cargo fmt
+
+# Run clippy
+cargo clippy --all-features
+
+# Check for typos
+typos
+
+# Run tests
+cargo test --release
+```
+
+### CI Pipeline Stages
+
+1. **Format and Lint Checks**
+   - `cargo fmt --check`
+   - `cargo clippy --all-features`
+   - Spell check with typos
+   - PR title validation (conventional commits)
+
+2. **Build Validation**
+   - `cargo check --all-features`
+   - Build without lock files
+   - no_std compatibility check
+   - Example compilation
+
+3. **Test Execution**
+   - Unit and integration tests
+   - Release mode testing
+   - Feature flag combinations
+   - Architecture-specific tests (x86-64, ARM64)
+
+4. **Specialized Tests**
+   - SP1 verifier crate tests
+   - Host build verification
+   - Example program validation
+
+### Release Process
+Automated via release-plz:
+1. Push changes to dev branch
+2. Release-plz creates release PR
+3. Review and merge release PR
+4. Automated publish to crates.io
+5. Changes merged back to main
+
+Manual fallback:
+```bash
+release-plz update
+release-plz release
+```
+
+## Code Review Guidelines
+
+### For Contributors
+- Fill out PR template completely
+- Keep PRs focused on single concerns
+- Respond to feedback promptly
+- Be open to suggestions
+- Update documentation as needed
+
+### For Reviewers
+- Review constructively and respectfully
+- Focus on code quality and correctness
+- Verify tests are adequate
+- Check for performance implications
+- Ensure documentation is updated
+
+### Review Checklist
+- [ ] Tests pass on all architectures
+- [ ] Code follows project conventions
+- [ ] Documentation is updated
+- [ ] No security vulnerabilities introduced
+- [ ] Performance impact considered
+- [ ] Breaking changes documented
+
+## Development Environment Setup
+
+### Prerequisites
+1. Install Rust (stable channel)
+2. Install Go (required for building)
+3. Install rust-analyzer for IDE support
+4. Install mdbook for documentation: `cargo install mdbook`
+
+### Recommended Tools
+- VS Code with rust-analyzer extension
+- cargo-watch for auto-recompilation
+- cargo-expand for macro debugging
+- flamegraph for performance profiling
+
+### Building the Project
+```bash
+# Build all crates
+cargo build --all
+
+# Build with all features
+cargo build --all-features
+
+# Build in release mode
+cargo build --release
+```
+
+### Documentation
+```bash
+# Build and serve documentation locally
+cd book && mdbook serve
+
+# Generate rustdoc
+cargo doc --all-features --open
+```
+
+## Performance Considerations
+
+### Benchmarking
+- Use `cargo bench` for performance testing
+- Profile before optimizing
+- Document performance-critical changes
+- Include benchmarks for new features
+
+### GPU Development
+- CUDA support requires NVIDIA GPU
+- Test CPU and GPU paths
+- Document GPU-specific requirements
+- Handle fallback gracefully
