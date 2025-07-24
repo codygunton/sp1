@@ -5660,7 +5660,6 @@ dependencies = [
  "sp1-prover",
  "sp1-sdk",
  "sp1-stark",
- "test-artifacts",
  "time 0.3.41",
  "tracing",
 ]
