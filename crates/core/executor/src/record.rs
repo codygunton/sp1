@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     events::{
-        AUIPCEvent, AluEvent, BranchEvent, ByteLookupEvent, ByteRecord, CpuEvent,
+        AUIPCEvent, AluEvent, BranchEvent, ByteLookupEvent, ByteRecord, CpuEvent, FenceEvent,
         GlobalInteractionEvent, JumpEvent, MemInstrEvent, MemoryInitializeFinalizeEvent,
         MemoryLocalEvent, MemoryRecordEnum, PrecompileEvent, PrecompileEvents, SyscallEvent,
     },
@@ -55,6 +55,8 @@ pub struct ExecutionRecord {
     pub branch_events: Vec<BranchEvent>,
     /// A trace of the jump events.
     pub jump_events: Vec<JumpEvent>,
+    /// A trace of the fence events.
+    pub fence_events: Vec<FenceEvent>,
     /// A trace of the byte lookups that are needed.
     pub byte_lookups: HashMap<ByteLookupEvent, usize>,
     /// A trace of the precompile events.
@@ -282,6 +284,7 @@ impl MachineRecord for ExecutionRecord {
         stats.insert("branch_events".to_string(), self.branch_events.len());
         stats.insert("jump_events".to_string(), self.jump_events.len());
         stats.insert("auipc_events".to_string(), self.auipc_events.len());
+        stats.insert("fence_events".to_string(), self.fence_events.len());
 
         for (syscall_code, events) in self.precompile_events.iter() {
             stats.insert(format!("syscall {syscall_code:?}"), events.len());
@@ -318,6 +321,7 @@ impl MachineRecord for ExecutionRecord {
         self.branch_events.append(&mut other.branch_events);
         self.jump_events.append(&mut other.jump_events);
         self.auipc_events.append(&mut other.auipc_events);
+        self.fence_events.append(&mut other.fence_events);
         self.syscall_events.append(&mut other.syscall_events);
 
         self.precompile_events.append(&mut other.precompile_events);

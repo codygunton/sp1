@@ -73,6 +73,7 @@ impl Shapeable for ExecutionRecord {
             (RiscvAirId::Global, self.global_interaction_events.len()),
             (RiscvAirId::SyscallCore, self.syscall_events.len()),
             (RiscvAirId::SyscallInstrs, self.syscall_events.len()),
+            (RiscvAirId::Fence, self.fence_events.len()),
         ]
     }
 

@@ -127,18 +127,21 @@ pub enum RiscvAirId {
     /// The syscall instructions chip.
     #[subenum(CoreAirId)]
     SyscallInstrs = 39,
+    /// The fence chip.
+    #[subenum(CoreAirId)]
+    Fence = 40,
     /// The memory global init chip.
-    MemoryGlobalInit = 40,
+    MemoryGlobalInit = 41,
     /// The memory global finalize chip.
-    MemoryGlobalFinalize = 41,
+    MemoryGlobalFinalize = 42,
     /// The memory local chip.
     #[subenum(CoreAirId)]
-    MemoryLocal = 42,
+    MemoryLocal = 43,
     /// The global chip.
     #[subenum(CoreAirId)]
-    Global = 43,
+    Global = 44,
     /// The byte chip.
-    Byte = 44,
+    Byte = 45,
 }
 
 impl RiscvAirId {
@@ -161,6 +164,7 @@ impl RiscvAirId {
             RiscvAirId::Jump,
             RiscvAirId::SyscallCore,
             RiscvAirId::SyscallInstrs,
+            RiscvAirId::Fence,
             RiscvAirId::Global,
         ]
     }

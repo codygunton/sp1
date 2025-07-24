@@ -43,5 +43,6 @@
   "Cpu": 109,
   "ShaCompress": 506,
   "MemoryInstrs": 93,
-  "Secp256k1DoubleAssign": 4564
+  "Secp256k1DoubleAssign": 4564,
+  "Fence": 41
 }

@@ -27,7 +27,7 @@ use crate::{
 /// A module for importing all the different RISC-V chips.
 pub(crate) mod riscv_chips {
     pub use crate::{
-        alu::{AddSubChip, BitwiseChip, DivRemChip, LtChip, MulChip, ShiftLeft, ShiftRightChip},
+        alu::{AddSubChip, BitwiseChip, DivRemChip, FenceChip, LtChip, MulChip, ShiftLeft, ShiftRightChip},
         bytes::ByteChip,
         cpu::CpuChip,
         memory::MemoryGlobalChip,
@@ -98,6 +98,8 @@ pub enum RiscvAir<F: PrimeField32> {
     Jump(JumpChip),
     /// An AIR for RISC-V ecall instructions.
     SyscallInstrs(SyscallInstrsChip),
+    /// An AIR for RISC-V fence instructions.
+    Fence(FenceChip),
     /// A lookup table for byte operations.
     ByteLookup(ByteChip<F>),
     /// A table for initializing the global memory state.
@@ -389,6 +391,10 @@ impl<F: PrimeField32> RiscvAir<F> {
         costs.insert(syscall_instrs.name(), syscall_instrs.cost());
         chips.push(syscall_instrs);
 
+        let fence = Chip::new(RiscvAir::Fence(FenceChip::default()));
+        costs.insert(fence.name(), fence.cost());
+        chips.push(fence);
+
         let memory_global_init = Chip::new(RiscvAir::MemoryGlobalInit(MemoryGlobalChip::new(
             MemoryChipType::Initialize,
         )));
@@ -445,6 +451,7 @@ impl<F: PrimeField32> RiscvAir<F> {
             RiscvAir::Branch(BranchChip::default()),
             RiscvAir::Jump(JumpChip::default()),
             RiscvAir::SyscallInstrs(SyscallInstrsChip::default()),
+            RiscvAir::Fence(FenceChip::default()),
             RiscvAir::MemoryLocal(MemoryLocalChip::new()),
             RiscvAir::Global(GlobalChip),
             RiscvAir::SyscallCore(SyscallChip::core()),
@@ -534,6 +541,7 @@ impl From<RiscvAirDiscriminants> for RiscvAirId {
             RiscvAirDiscriminants::Branch => RiscvAirId::Branch,
             RiscvAirDiscriminants::Jump => RiscvAirId::Jump,
             RiscvAirDiscriminants::SyscallInstrs => RiscvAirId::SyscallInstrs,
+            RiscvAirDiscriminants::Fence => RiscvAirId::Fence,
             RiscvAirDiscriminants::ByteLookup => RiscvAirId::Byte,
             RiscvAirDiscriminants::MemoryGlobalInit => RiscvAirId::MemoryGlobalInit,
             RiscvAirDiscriminants::MemoryGlobalFinal => RiscvAirId::MemoryGlobalFinalize,

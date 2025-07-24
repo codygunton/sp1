@@ -23,7 +23,7 @@ use crate::{
     },
     estimate_riscv_lde_size,
     events::{
-        AUIPCEvent, AluEvent, BranchEvent, CpuEvent, JumpEvent, MemInstrEvent,
+        AUIPCEvent, AluEvent, BranchEvent, CpuEvent, FenceEvent, JumpEvent, MemInstrEvent,
         MemoryAccessPosition, MemoryInitializeFinalizeEvent, MemoryLocalEvent, MemoryReadRecord,
         MemoryRecord, MemoryRecordEnum, MemoryWriteRecord, SyscallEvent,
         NUM_LOCAL_MEMORY_ENTRIES_PER_ROW_EXEC,
@@ -1078,6 +1078,8 @@ impl<'a> Executor<'a> {
             self.emit_auipc_event(instruction.opcode, a, b, c, op_a_0);
         } else if instruction.is_ecall_instruction() {
             self.emit_syscall_event(clk, record.a, op_a_0, syscall_code, b, c, next_pc);
+        } else if instruction.is_fence_instruction() {
+            self.record.fence_events.push(FenceEvent::new(self.state.pc));
         } else {
             unreachable!()
         }
@@ -2305,6 +2307,9 @@ impl<'a> Executor<'a> {
 
         // Compute the number of events in the syscall instruction chip.b
         event_counts[RiscvAirId::SyscallInstrs] = opcode_counts[Opcode::ECALL];
+
+        // Compute the number of events in the fence chip.
+        event_counts[RiscvAirId::Fence] = opcode_counts[Opcode::FENCE];
 
         // Compute the number of events in the syscall core chip.
         event_counts[RiscvAirId::SyscallCore] = syscalls_sent;
