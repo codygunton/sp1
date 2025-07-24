@@ -347,8 +347,8 @@ impl InstructionProcessor for InstructionTranspiler {
         Instruction::unimp()
     }
 
-    fn process_fence(&mut self, _: IType) -> Self::InstructionResult {
-        Instruction::unimp()
+    fn process_fence(&mut self, dec_insn: IType) -> Self::InstructionResult {
+        Instruction::from_i_type(Opcode::FENCE, &dec_insn)
     }
 
     fn process_mret(&mut self) -> Self::InstructionResult {

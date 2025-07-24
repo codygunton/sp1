@@ -133,6 +133,13 @@ impl Instruction {
     pub const fn is_unimp_instruction(&self) -> bool {
         matches!(self.opcode, Opcode::UNIMP)
     }
+
+    /// Returns if the instruction is a fence instruction.
+    #[must_use]
+    #[inline]
+    pub const fn is_fence_instruction(&self) -> bool {
+        matches!(self.opcode, Opcode::FENCE)
+    }
 }
 
 impl Debug for Instruction {

@@ -1381,6 +1381,9 @@ impl<'a> Executor<'a> {
             (a, b, c, clk, next_pc, syscall, exit_code) = self.execute_ecall()?;
         } else if instruction.is_ebreak_instruction() {
             return Err(ExecutionError::Breakpoint());
+        } else if instruction.is_fence_instruction() {
+            // Fence is a no-op in SP1 since it executes in a single-threaded environment
+            (a, b, c) = (0, 0, 0);
         } else if instruction.is_unimp_instruction() {
             // See https://github.com/riscv-non-isa/riscv-asm-manual/blob/master/riscv-asm.md#instruction-aliases
             return Err(ExecutionError::Unimplemented());

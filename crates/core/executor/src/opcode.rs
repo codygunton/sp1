@@ -102,6 +102,8 @@ pub enum Opcode {
     EBREAK = 36,
     /// Unimplemented instruction.
     UNIMP = 37,
+    /// Memory fence instruction (no-op in SP1).
+    FENCE = 38,
 }
 /// Byte Opcode.
 ///
@@ -174,6 +176,7 @@ impl Opcode {
             Opcode::REM => "rem",
             Opcode::REMU => "remu",
             Opcode::UNIMP => "unimp",
+            Opcode::FENCE => "fence",
         }
     }
 
