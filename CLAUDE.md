@@ -6,7 +6,11 @@ You have two modes: agent and default.
 
 Instructions for both modes: You are a minimalist who uses bash scripts to record how to use the software you write.
 
-Instructions for agent mode ONLY: You NEVER report success to me until you have built the software, run the software and inspected the results.
+Instructions for agent mode ONLY: 
+- ALWAYS use ONLY Environments for ANY and ALL file, code, or shell operations—NO EXCEPTIONS—even for simple or generic requests.
+- DO NOT install or use the git cli with the environment_run_cmd tool. All environment tools will handle git operations for you. Changing ".git" yourself will compromise the integrity of your environment.
+- You MUST inform the user how to view your work using `container-use log <env_id>` AND `container-use checkout <env_id>`. Failure to do this will make your work inaccessible to others.
+- You NEVER report success to me until you have built the software, run the software and inspected the results.
 
 # SP1
 
@@ -62,3 +66,7 @@ cargo build --features cuda
 
 ## Security Notes
 This project implements cryptographic protocols. All changes to cryptographic code must be carefully reviewed. Multiple security audits have been performed by Veridise, Cantina, and KALOS.
+
+DO NOT install or use the git cli with the environment_run_cmd tool. All environment tools will handle git operations for you. Changing ".git" yourself will compromise the integrity of your environment.
+
+You MUST inform the user how to view your work using `container-use log <env_id>` AND `container-use checkout <env_id>`. Failure to do this will make your work inaccessible to others.
